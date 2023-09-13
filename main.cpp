@@ -51,6 +51,8 @@ using Eigen::Matrix3d;
 std::string global_regfile;
 std::string global_reffile;
 std::string global_save_name_dis;
+std::string global_save_folder;
+std::string global_save_name;
 
 
 /**
@@ -475,6 +477,13 @@ std::string remove_extension(const std::string& filename) {
 	return filename.substr(0, lastdot);
 }
 
+std::string clear_slash(string const& path_of_file, string const& d_slash = "/\\")
+{
+    size_t index_of_slash = path_of_file.find_last_of(d_slash);
+    string file_name = path_of_file.substr(index_of_slash + 1);
+    return file_name;
+}
+
 /**
 * \fn bool write_mean_features(std::vector<double>& Curv_Lumi, std::vector<double>& Curv_Constrast,
 	std::vector<double>& Curv_Struct, std::vector<double>& IDF1, std::vector<double>& IDF2,
@@ -500,8 +509,19 @@ std::string remove_extension(const std::string& filename) {
 bool write_mean_features(std::vector<double>& Curv_Lumi, std::vector<double>& Curv_Constrast,
 	std::vector<double>& Curv_Struct, std::vector<double>& IDF1, std::vector<double>& IDF2,
 	std::vector<double>& IDF3, std::vector<double>& IDF4, std::vector<double>& IDF5,
-	const string regfile, const string reffile,double PCQM, const string destination) {
-
+	const string regfile, const string reffile,double PCQM, std::string destination) {
+    // destination: F:/CWIDIS_fused/PCQM/PCQM_Feature_New/H1_C1_R1/rafa_001_feature.txt
+	std::string destination_dir = destination.find_last_of("/\\") != std::string::npos ? destination.substr(0, destination.find_last_of("/\\")) : ".";
+	if (!std::filesystem::exists(destination_dir)) {
+        // The directory does not exist, so create it
+        if (std::filesystem::create_directories(destination_dir)) {
+            std::cout << "Directory created successfully." << std::endl;
+			std::cout << destination_dir << std::endl;
+        } else {
+            std::cerr << "Failed to create the directory." << std::endl;
+            return 1; // Exit the program with an error code
+        }
+    }
 
 	int length;
 	ifstream filestr;
@@ -971,10 +991,24 @@ void compute_statistics(double radius, const double maxDim, PointSet& regptset, 
 		geom_structure_field_xm.begin(), std::plus<double>());
 
 	PCQM_xm = geom_structure_field_xm;
-	std::string save_path_vector = "F:/CWIDIS_fused/PCQM/PCQM_Vector_New/";
-	std::string save_path_feature = "F:/CWIDIS_fused/PCQM/PCQM_Feature_New/";
-	std::string save_name_vector = save_path_vector + global_save_name_dis + ".csv";
-	std::string save_name_feature = save_path_feature + global_save_name_dis + "_feature.csv";
+	std::string save_path_vector = "F:/CWIDIS_fused/PCQM/PCQM_PerPoint/";
+	std::string save_path_feature = "F:/CWIDIS_fused/PCQM/PCQM_Feature/";
+	std::string save_name_vector = save_path_vector + global_save_folder + "/" +  global_save_name + ".csv";
+	std::string save_name_feature = save_path_feature + global_save_folder + "/" +  global_save_name + ".csv";
+
+	// check if the dir exists F:/CWIDIS_fused/PCQM/PCQM_PerPoint/H1_C1_R1/rafa_001_feature.txt
+	std::string destination_dir_perPoint = save_name_vector.find_last_of("/\\") != std::string::npos ? save_name_vector.substr(0, save_name_vector.find_last_of("/\\")) : ".";
+	if (!std::filesystem::exists(destination_dir_perPoint)) {
+        // The directory does not exist, so create it
+        if (std::filesystem::create_directories(destination_dir_perPoint)) {
+            std::cout << "Directory created successfully." << std::endl;
+			std::cout << destination_dir_perPoint << std::endl;
+        } else {
+            std::cerr << "Failed to create the directory." << std::endl;
+            return; // Exit the program with an error code
+        }
+    }
+
 	ofstream myfile(save_name_vector);
 	int vsize = PCQM_xm.size();
 	for (int n = 0; n < vsize; n++)
@@ -985,9 +1019,6 @@ void compute_statistics(double radius, const double maxDim, PointSet& regptset, 
 	//Write features and PCQM to CSV
 	write_mean_features(geom_lightness_field, geom_contrast_field, geom_structure_field, color_lightness_field, color_contrast_field, color_structure_field,
 		color_chroma_field, color_hue_field, global_regfile, global_reffile, PCQM ,save_name_feature);
-
-	
-
 }
 
 
@@ -1074,9 +1105,22 @@ int main(int argc, char** argv) {
 	
 
 	global_regfile = remove_extension(regfile);
-	global_reffile = remove_extension(reffile);
+	global_reffile = remove_extension(reffile); //D:\XuemeiZhou\PointCloudEyeTracking_BenchMarking\Temp\H1_C1_R1-rafa_001
 
-	std::string reffile_without_path = reffile.filename(); //D:\XuemeiZhou\PointCloudEyeTracking_BenchMarking\Temp\H1_C1_R1-rafa_001
+	std::string reffile_without_path = clear_slash(global_reffile); //H1_C1_R1-rafa_001
+	// Find the position of the "-" character in the input string
+    size_t pos = reffile_without_path.find("-");
+	if (pos != std::string::npos) {
+		// Get the string before the "-" character
+		global_save_folder = reffile_without_path.substr(0, pos);
+		// Get the string after the "-" character
+		global_save_name = reffile_without_path.substr(pos + 1); // Skip the "-" character itself
+	}
+	else {
+		std::cerr << "Error: no '-' character in the input string" << std::endl;
+		return -1;
+	}
+		  
 	global_save_name_dis = reffile_without_path;
 
 
