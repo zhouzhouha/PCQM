@@ -48,6 +48,7 @@ using Eigen::Matrix3d;
 
 std::string global_regfile;
 std::string global_reffile;
+std::string global_save_name_dis;
 
 
 /**
@@ -945,9 +946,43 @@ void compute_statistics(double radius, const double maxDim, PointSet& regptset, 
 	//PCQM Formula
 	PCQM = f3/ size_tab * 0.0057 + (1.0 - f4/ size_tab) * 0.9771 + (1.0 - f6/ size_tab) * 0.0172;
 
+	// xuemei add related code to compute the value for each point in PCQM
+	std::vector<double> PCQM_xm;
+	std::vector<double> geom_structure_field_xm;
+	std::vector<double> color_lightness_field_xm;
+	std::vector<double> color_structure_field_xm;
+	geom_structure_field_xm = geom_structure_field;
+	color_lightness_field_xm = color_lightness_field;
+	color_structure_field_xm = color_structure_field;
+
+	std::for_each(color_lightness_field_xm.begin(), color_lightness_field_xm.end(), [](double& n) { n += (-1); });
+	std::for_each(color_structure_field_xm.begin(), color_structure_field_xm.end(), [](double& n) { n += (-1); });
+
+	std::for_each(geom_structure_field_xm.begin(), geom_structure_field_xm.end(), [](double& n) { n *= 0.0057; });
+	std::for_each(color_lightness_field_xm.begin(), color_lightness_field_xm.end(), [](double& n) { n *= 0.9771; });
+	std::for_each(color_structure_field_xm.begin(), color_structure_field_xm.end(), [](double& n) { n *= 0.0172; });
+
+	
+	std::transform(geom_structure_field_xm.begin(), geom_structure_field_xm.end(), color_lightness_field_xm.begin(),
+		geom_structure_field_xm.begin(), std::plus<double>());
+	std::transform(geom_structure_field_xm.begin(), geom_structure_field_xm.end(), color_structure_field_xm.begin(),
+		geom_structure_field_xm.begin(), std::plus<double>());
+
+	PCQM_xm = geom_structure_field_xm;
+	std::string save_path_vector = "C:/Xuemei/XuemeiZhou/code/MATLAB/PointBased_Metric/Point2Point/fused/CWIDIS/PCQM_Vector_New/";
+	std::string save_path_feature = "C:/Xuemei/XuemeiZhou/code/MATLAB/PointBased_Metric/Point2Point/fused/CWIDIS/PCQM_Feature_New/";
+	std::string save_name_vector = save_path_vector + global_save_name_dis + ".csv";
+	std::string save_name_feature = save_path_feature + global_save_name_dis + "_feature.csv";
+	ofstream myfile(save_name_vector);
+	int vsize = PCQM_xm.size();
+	for (int n = 0; n < vsize; n++)
+	{
+		myfile << PCQM_xm[n] << endl;
+	}
+
 	//Write features and PCQM to CSV
 	write_mean_features(geom_lightness_field, geom_contrast_field, geom_structure_field, color_lightness_field, color_contrast_field, color_structure_field,
-		color_chroma_field, color_hue_field, global_regfile, global_reffile, PCQM ,"features_extracted.csv");
+		color_chroma_field, color_hue_field, global_regfile, global_reffile, PCQM ,save_name_feature);
 
 	
 
@@ -1038,6 +1073,9 @@ int main(int argc, char** argv) {
 
 	global_regfile = remove_extension(regfile);
 	global_reffile = remove_extension(reffile);
+
+	std::string reffile_with_path = global_reffile;
+	global_save_name_dis = reffile_with_path;
 
 
 	std::cout << "Input reference point set file:  " << reffile << std::endl;
