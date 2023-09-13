@@ -29,6 +29,8 @@
 #include "tinyply.h"
 
 #include "utilities.h"
+#include "filesystem"
+#include <iostream>
 
 //#define WRITE_FEATURES_CSV 1
 
@@ -185,7 +187,7 @@ void initMatLABCH(
 	std::ifstream data_g;
 	std::ifstream data_a;
 	std::ifstream data_b;
-	data_f.open("L_data.txt", std::ifstream::in);
+	data_f.open("D:/XuemeiZhou/PCQM/build/L_data.txt", std::ifstream::in);
 
 
 	if (!data_f.fail()) {
@@ -205,10 +207,10 @@ void initMatLABCH(
 		init_grid_L[i] = i * 0.001;
 	}
 
-	data_f.open("RegularGridInit_0_0_1.txt", std::ifstream::in);
-	data_g.open("RegularGridInit_0_0_2.txt", std::ifstream::in);
-	data_a.open("RegularGrid_0_0_1.txt", std::ifstream::in);
-	data_b.open("RegularGrid_0_0_2.txt", std::ifstream::in);
+	data_f.open("D:/XuemeiZhou/PCQM/build/RegularGridInit_0_0_1.txt", std::ifstream::in);
+	data_g.open("D:/XuemeiZhou/PCQM/build/RegularGridInit_0_0_2.txt", std::ifstream::in);
+	data_a.open("D:/XuemeiZhou/PCQM/build/RegularGrid_0_0_1.txt", std::ifstream::in);
+	data_b.open("D:/XuemeiZhou/PCQM/build/RegularGrid_0_0_2.txt", std::ifstream::in);
 
 
 	if (!data_f.fail() && !data_g.fail() && !data_a.fail() && !data_b.fail()) {
@@ -969,8 +971,8 @@ void compute_statistics(double radius, const double maxDim, PointSet& regptset, 
 		geom_structure_field_xm.begin(), std::plus<double>());
 
 	PCQM_xm = geom_structure_field_xm;
-	std::string save_path_vector = "C:/Xuemei/XuemeiZhou/code/MATLAB/PointBased_Metric/Point2Point/fused/CWIDIS/PCQM_Vector_New/";
-	std::string save_path_feature = "C:/Xuemei/XuemeiZhou/code/MATLAB/PointBased_Metric/Point2Point/fused/CWIDIS/PCQM_Feature_New/";
+	std::string save_path_vector = "F:/CWIDIS_fused/PCQM/PCQM_Vector_New/";
+	std::string save_path_feature = "F:/CWIDIS_fused/PCQM/PCQM_Feature_New/";
 	std::string save_name_vector = save_path_vector + global_save_name_dis + ".csv";
 	std::string save_name_feature = save_path_feature + global_save_name_dis + "_feature.csv";
 	ofstream myfile(save_name_vector);
@@ -1074,8 +1076,8 @@ int main(int argc, char** argv) {
 	global_regfile = remove_extension(regfile);
 	global_reffile = remove_extension(reffile);
 
-	std::string reffile_with_path = global_reffile;
-	global_save_name_dis = reffile_with_path;
+	std::string reffile_without_path = reffile.filename(); //D:\XuemeiZhou\PointCloudEyeTracking_BenchMarking\Temp\H1_C1_R1-rafa_001
+	global_save_name_dis = reffile_without_path;
 
 
 	std::cout << "Input reference point set file:  " << reffile << std::endl;
